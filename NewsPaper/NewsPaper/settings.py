@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django_filters',
     'django.contrib.sites',
     'django.contrib.flatpages',
+    'django_apscheduler',
 
     'allauth',
     'allauth.account',
@@ -151,3 +152,25 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 ACCOUNT_FORMS = {"signup": "accounts.forms.CustomSignupForm"}
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = "test@yandex.ru"
+EMAIL_HOST_PASSWORD = "test"
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+EMAIL_SUBJECT_PREFIX = "NewsPaper "
+
+DEFAULT_FROM_EMAIL = "test@yandex.ru"
+
+SERVER_EMAIL = "pochta_89@yandex.ru"
+AUTHORS = (
+    ('Ivan', 'ivan22@yandex.ru'),
+    ('Petr', 'petr33@gmail.com'),
+    ('Semen', 'semen44@yandex.ru'),
+)
+
+ADMINS = (
+    ('anton', 'anton@yandex.ru'),
+)

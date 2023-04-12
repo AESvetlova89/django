@@ -1,27 +1,16 @@
-"""NewsPaper URL Configuration
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-from django.contrib import admin
 from django.urls import path
-from . import views
+
+from .views import (NewsList, NewsDetail, NewsListSearch, PostCreate, PostUpdate,
+                    PostDelete, PostCreateAR, PostUpdateAR, PostDeleteAR)
 
 urlpatterns = [
-    path('',         views.PostList.as_view(), name='post_list'),
-    path('<int:pk>', views.PostDetail.as_view(), name='post_detail'),
-    path('search/',  views.PostSearch.as_view()),
-    path('article/create/', views.CreatePost.as_view()),
-    path('create/',         views.CreateNews.as_view()),
-    path('<int:pk>/update/', views.UpdatePost.as_view()),
-    path('<int:pk>/delete/', views.DeletePost.as_view()),
+    path('', NewsList.as_view(), name='all_news'),
+    path('<int:pk>', NewsDetail.as_view(), name='detail_one_news'),
+    path('search', NewsListSearch.as_view(), name='news_search'),
+    path('news/create/', PostCreate.as_view(), name='news_create'),
+    path('<int:pk>/news/edit/', PostUpdate.as_view(), name='news_create'),
+    path('<int:pk>/news/delete/', PostDelete.as_view(), name='news_delete'),
+    path('articles/create/', PostCreateAR.as_view(), name='articles_create'),
+    path('<int:pk>/articles/edit/', PostUpdateAR.as_view(), name='articles_create'),
+    path('<int:pk>/articles/delete/', PostDeleteAR.as_view(), name='articles_delete'),
 ]

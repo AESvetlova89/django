@@ -5,51 +5,47 @@ from django.urls import reverse
 
 
 class Author(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    rating = models.IntegerField(default=0)
-
-    class Meta:
-        verbose_name = 'Автор'
-        verbose_name_plural = 'Авторы'
-
-    def update_rating(self):
-        self.rating = Post.objects.filter(author_id=self.id).aggregate(Sum('rating'))['rating__sum'] * 3 + \
-                      Comment.objects.filter(user_id=self.user.id).aggregate(Sum('rating'))['rating__sum'] + \
-                      Comment.objects.filter(
-                          post_id__in=[q['id'] for q in Post.objects.filter(author_id=self.id).values('id')]).aggregate(
-                          Sum('rating'))['rating__sum']
-        self.save()
+    authorUser = models.OneToOneField(User, on_delete=models.CASCADE)
+    ratingAuthor = models.SmallIntegerField(default=0)
 
     def __str__(self):
-        return self.user.username
+        return f'{self.authorUser}'
+
+    def update_rating(self):
+        postRat = self.post_set.aggregate(postRating=Sum('rating'))
+        pRat = 0
+        pRat += postRat.get('postRating')
+
+        commentRat = self.authorUser.comment_set.aggregate(commentRating=Sum('rating'))
+        cRat = 0
+        cRat += commentRat.get('commentRating')
+
+        self.ratingAuthor = pRat * 3 + cRat
+        self.save()
 
 
 class Category(models.Model):
-    name = models.TextField(unique=True)
-
-    class Meta:
-        verbose_name = 'Категория'
-        verbose_name_plural = 'Категории'
+    name = models.CharField(max_length=64, unique=True)
+    subscribers = models.ManyToManyField(User, through='Subscriber', related_name='categories')
 
     def __str__(self):
-        return self.name
+        return self.name.title()
 
 
 class Post(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
-    isnews = models.BooleanField(default=False)
-    created = models.DateTimeField(auto_now_add=True)
-    categories = models.ManyToManyField(Category, through='PostCategory')
-    title = models.CharField(max_length=64)
-    text = models.CharField(max_length=4096)
-    rating = models.IntegerField(default=0)
-
-    class Meta:
-        verbose_name = 'Новость'
-        verbose_name_plural = 'Новости'
-
-    def preview(self):
-        return (self.text[:20] + '...') if len(self.text) > 20 else self.text
+    NEWS = 'NW'
+    ARTICLE = 'AR'
+    CATEGORY_CHOISES= (
+        (NEWS, 'Новость'),
+        (ARTICLE, 'Статья'),
+    )
+    categoryType = models.CharField(max_length=2, choices=CATEGORY_CHOISES, default=ARTICLE)
+    dateCreation = models.DateTimeField(auto_now_add=True)
+    postCategory = models.ManyToManyField(Category, through='PostCategory')
+    title = models.CharField(max_length=128)
+    text = models.TextField()
+    rating = models.SmallIntegerField(default=0)
 
     def like(self):
         self.rating += 1
@@ -59,35 +55,27 @@ class Post(models.Model):
         self.rating -= 1
         self.save()
 
+    def preview(self):
+        return self.text[0:123] + '...'
+
     def __str__(self):
-        return self.title
+        return f'{self.categoryType.title()}:{self.title.title()}:{self.dateCreation}:{self.text.title()}'
 
     def get_absolute_url(self):
-        return reverse('post_detail', args=[str(self.id)])
+        return reverse('detail_one_news', args=[str(self.id)])
 
 
 class PostCategory(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-
-    class Meta:
-        verbose_name = 'Категория новости'
-        verbose_name_plural = 'Категории новостей'
-
-    def __str__(self):
-        return f'{self.post} ({self.category})'
+    postThrough = models.ForeignKey(Post, on_delete=models.CASCADE)
+    categoryThrough = models.ForeignKey(Category, on_delete=models.CASCADE)
 
 
 class Comment(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    text = models.CharField(max_length=4096)
-    created = models.DateTimeField(auto_now_add=True)
-    rating = models.IntegerField(default=0)
-
-    class Meta:
-        verbose_name = 'Комментарий'
-        verbose_name_plural = 'Комментарии'
+    commentPost = models.ForeignKey(Post, on_delete=models.CASCADE)
+    commentUser = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    dateCreation = models.DateTimeField(auto_now_add=True)
+    rating = models.SmallIntegerField(default=0)
 
     def like(self):
         self.rating += 1
@@ -97,5 +85,15 @@ class Comment(models.Model):
         self.rating -= 1
         self.save()
 
-    def __str__(self):
-        return f'{self.user.username} про "{self.post}"'
+
+class Subscriber(models.Model):
+    user = models.ForeignKey(
+        to=User,
+        on_delete=models.CASCADE,
+        related_name='subscriptions',
+    )
+    category = models.ForeignKey(
+        to='Category',
+        on_delete=models.CASCADE,
+        related_name='subscriptions',
+    )
