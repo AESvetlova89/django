@@ -1,48 +1,79 @@
 {% extends 'flatpages/default.html' %}
+
 {% load custom_filters %}
-{% load custom_tags %}
-{% block title %}Новости{% endblock title %}
+
+{% block title %}
+NEWS
+{% endblock title %}
+
 {% block content %}
-{% if posts %}
-<h1>Все новости</h1>
-<table><tbody>
-    <tr class=title>
-        <td>Заголовок</td>
-        <td>Дата</td>
-        <td>Предпросмотр</td>
-    </tr>
-{% for p in posts %}
-<tr>
-    <td><a href="{{p.id}}">{{p.title|censor}}</a></td>
-    <td>{{p.created|date:'d.m.Y'}}</td>
-    <td>{{p.preview|censor}}</td>
-</tr>
-{%endfor%}
-</tbody></table>
-
-{% if page_obj.has_previous %}
-  <a href="?page=1">1</a>
-  {% if page_obj.previous_page_number != 1 %}
-    {% if page_obj.number != 3 %}
-      ...
+    <h1>Все новости и статьи:</h1>
+    <h8>Количество новостей и статей: {{ posts|length }}</h8>
+    <hr>
+<!--       {# Теперь будем проверять не request.user.is_authenticated, а конкретные права #}-->
+    {% if perms.news.add_post %}
+    <a href="{% url 'articles_create' %}">Добавить статью</a> <a href="{% url 'news_create' %}">Добавить новость</a>
     {% endif %}
-    <a href="?page={{ page_obj.previous_page_number }}">{{ page_obj.previous_page_number }}</a>
-  {% endif %}
-{% endif %}
 
-{{ page_obj.number }}
+    {% if posts %}
+        <table>
+            <tr>
+                <td>Заголовок: </td>
+                <td>Дата публикации: </td>
+                <td>Содержание: </td>
+                <td>Категория поста: </td>
+                {% if perms.news.change_post or perms.news.delete_post %}
+                <td>Действия:</td>
+                {% endif %}
+            </tr>
 
-{% if page_obj.has_next %}
-  <a href="?page={{ page_obj.next_page_number }}">{{ page_obj.next_page_number }}</a>
-  {% if paginator.num_pages != page_obj.next_page_number %}
-    {% if page_obj.number != page_obj.paginator.num_pages|add:-2 %}
-      ...
+            {% for post in posts|dictsortreversed:"dateCreation" %}
+            <tr>
+                <td>{{ post.title|censor:"редиска" }}</td>
+                <td>{{ post.dateCreation|date:'d M Y' }}</td>
+                <td>{{ post.text|truncatewords:20|censor:"редиска"  }}</td>
+                <td>{{ post.categoryType }}</td>
+                <td>
+                    {# Размещаем ссылки #}
+                    {% if post.categoryType == "AR" and perms.news.change_post %}
+                     <a href="{% url 'articles_create' pk=post.id %}">Изменить</a>
+                    {% elif post.categoryType == "NW" and perms.news.change_post %}
+                     <a href="{% url 'news_create' pk=post.id %}">Изменить</a>
+                    {% endif %}
+                    {% if post.categoryType == "AR" and perms.news.delete_post %}
+                     <a href="{% url 'articles_delete' post.id %}">Удалить</a>
+                    {% elif post.categoryType == "NW" and perms.news.delete_post %}
+                     <a href="{% url 'news_delete' post.id %}">Удалить</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+
+        </table>
+    {% else %}
+         <h3> Новости готовятся к публикации</h3>
     {% endif %}
-    <a href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
-  {% endif %}
-{% endif %}
+<!--{# Добавляем пагинацию на страницу #}-->
 
-{% else %}
-<h1>Новостей нет</h1>
-{% endif%}
+<!--   {# Информация о предыдущих страницах #}-->
+   {% if page_obj.has_previous %}
+       <a href="?page=1">1</a>
+       {% if page_obj.previous_page_number != 1 %}
+           ...
+           <a href="?page={{ page_obj.previous_page_number }}">{{ page_obj.previous_page_number }}</a>
+       {% endif %}
+   {% endif %}
+
+<!--   {# Информация о текущей странице #}-->
+   {{ page_obj.number }}
+
+<!--   {# Информация о следующих страницах #}-->
+   {% if page_obj.has_next %}
+       <a href="?page={{ page_obj.next_page_number }}">{{ page_obj.next_page_number }}</a>
+       {% if paginator.num_pages != page_obj.next_page_number %}
+           ...
+           <a href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
+       {% endif %}
+   {% endif %}
+
 {% endblock content %}

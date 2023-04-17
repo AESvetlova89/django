@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def my_job():
     # Your job processing logic here...
-    today = datetime.datetime.now()
+    today = datetime.datetime.now(tz=timezone.utc)
     last_week = today - datetime.timedelta(days=7)
     posts = Post.objects.filter(time_create__gte=last_week)
     categories = posts.values_list('category__name', flat=True)

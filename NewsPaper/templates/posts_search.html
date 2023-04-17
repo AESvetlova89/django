@@ -1,0 +1,120 @@
+{% extends 'flatpages/default.html' %}
+
+{% load custom_filters %}
+{% load custom_tags %}
+
+{% block title %}
+    Search
+{% endblock title %}
+
+{% block content %}
+<h1>Search in all posts</h1>
+<h4>Posts on current page: {{ posts|length }}</h4>
+<h4>Total posts: {{ page_obj.paginator.count }}</h4>
+
+<hr>
+
+<form action="" method="get">
+    {{ filterset.form.as_p }}
+    <input type="submit" value="Find"/>
+</form>
+
+<div align="center">
+    {% if perms.news.add_post %}
+    <a href="{% url 'news_create' %}">Create news</a>
+    <br>
+    <a href="{% url 'articles_create' %}">Create article</a>
+    {% endif %}
+    <hr>
+    {% if posts %}
+    <table>
+        <tr>
+            <td>Title</td>
+            <td>Category</td>
+            <td>Date of creation</td>
+            <td>Preview</td>
+            {% if user.is_authenticated %}
+            {% if perms.news.change_post or perms.news.delete_post %}
+            <td>Actions</td>
+            {% endif %}
+            {% endif %}
+        </tr>
+
+        {% for post in posts %}
+        <tr>
+            <td>
+                <a href="{% url 'post_detail' pk=post.id %}">{{ post.title|censor }}</a>
+            </td>
+            <td>
+                {% for category in post.post_category.all %}
+                <a href="{% url 'categories_list' category.id %}">{{ category }}</a>
+                <br>
+                {% endfor %}
+            </td>
+            <td>{{ post.date_of_creation|date:'d.M.Y.' }}</td>
+            <td>{{ post.text|truncatechars:20|censor }}</td>
+            <td>
+                {% if user.is_authenticated %}
+                {% if perms.news.change_post %}
+                {% if post.author_of_post == request.user.author %}
+                <a href="{% url 'post_edit' pk=post.id %}">Edit</a>
+                {% endif %}
+                {% endif %}
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                {% if perms.news.delete_post %}
+                {% if post.author_of_post == request.user.author %}
+                <a href="{% url 'post_delete' pk=post.id %}">Delete</a>
+                {% endif %}
+                {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+
+    </table>
+    {% else %}
+    <h2>No posts found.</h2>
+    {% endif %}
+</div>
+
+<hr>
+
+{% if page_obj.has_previous %}
+<a href="?{% url_replace page=page_obj.previous_page_number %}">Previous</a>
+{% endif %}
+
+{% if page_obj.has_previous %}
+<a href="?{% url_replace page=1 %}">1</a>
+{% if page_obj.previous_page_number != 1 %}
+...
+<a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
+{% endif %}
+{% endif %}
+
+{{ page_obj.number }}
+
+{% if page_obj.has_next %}
+<a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
+{% if paginator.num_pages != page_obj.next_page_number %}
+...
+<a href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a>
+{% endif %}
+{% endif %}
+
+{% if page_obj.has_next %}
+<a href="?{% url_replace page=page_obj.next_page_number %}">Next</a>
+{% endif %}
+
+<br>
+
+{% if page_obj.has_previous %}
+<a href="?{% url_replace page=1 %}">First</a>
+{% endif %}
+
+{% if page_obj.has_next %}
+<a href="?{% url_replace page=page_obj.paginator.num_pages %}">Last</a>
+{% endif %}
+
+{% endblock content %}

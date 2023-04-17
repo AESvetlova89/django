@@ -12,7 +12,7 @@ from .models import Post,  Category, Subscriber
 class NewsList(ListView):
     model = Post
     categoryType = 'name'
-    template_name = 'all_news.html'
+    template_name = 'postlist.html'
     context_object_name = 'posts'
     paginate_by = 10
 
@@ -60,7 +60,7 @@ class PostList(ListView):
 class PostSearch(ListView):
     model = Post
     ordering = '-created'
-    template_name = 'search.html'
+    template_name = 'posts_search.html'
     context_object_name = 'posts'
     paginate_by = 10
 
@@ -135,7 +135,7 @@ class CategoryListView(ListView):
 
     def get_queryset(self):
         self.category = get_object_or_404(Category, id=self.kwargs['pk'])
-        queryset = Post.objects.filter(category=self.category).order_by('date')
+        queryset = Post.objects.filter(category=self.category).order_by('-date')
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -143,6 +143,14 @@ class CategoryListView(ListView):
         context['is_not_subscriber'] = self.request.user not in self.category.subscribers.all()
         context['category'] = self.category
         return context
+
+@login_required
+def subscribe(request, pk):
+    category = Category.objects.get(id=pk)
+    Subscriber.objects.create(user=request.user, category=category)
+
+    message = 'Вы успешно подписались на посты категории '
+    return render(request, 'subscribe.html', {'category': category, 'message': message})
 
 @login_required
 @csrf_protect
