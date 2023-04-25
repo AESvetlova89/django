@@ -162,7 +162,7 @@ EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
 EMAIL_SUBJECT_PREFIX = "NewsPaper "
 
-DEFAULT_FROM_EMAIL = "test@yandex.ru"
+DEFAULT_FROM_EMAIL = "AESvetlova89@yandex.ru"
 
 SERVER_EMAIL = "pochta_89@yandex.ru"
 AUTHORS = (
@@ -174,3 +174,12 @@ AUTHORS = (
 ADMINS = (
     ('anton', 'anton@yandex.ru'),
 )
+
+REDIS_KEY = os.getenv('REDIS_KEY')
+CELERY_BROKER_URL = f'redis://default:{REDIS_KEY}@redis-12857.c11.us-east-1-2.ec2.' \
+                    f'cloud.redislabs.com:12857'
+CELERY_RESULT_BACKEND = f'redis://default:{REDIS_KEY}@redis-12857.c11.us-east-1-2.ec2.' \
+                        f'cloud.redislabs.com:12857'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
