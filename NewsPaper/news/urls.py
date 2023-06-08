@@ -2,9 +2,13 @@ from django.urls import path
 
 from .views import (NewsList, NewsDetail, NewsListSearch, PostCreate, PostUpdate,
                     PostDelete, PostCreateAR, PostUpdateAR, PostDeleteAR, CategoryListView, subscribe, subscriptions)
+from django.views.decorators.cache import cache_page
+
 
 urlpatterns = [
-    path('', NewsList.as_view(), name='all_news'),
+    path('', cache_page(60*1)(NewsList.as_view()), name='all_news'),
+    # pk — это первичный ключ товара, который будет выводиться у нас в шаблон
+    # int — указывает на то, что принимаются только целочисленные значения
     path('<int:pk>', NewsDetail.as_view(), name='detail_one_news'),
     path('search', NewsListSearch.as_view(), name='news_search'),
     path('news/create/', PostCreate.as_view(), name='news_create'),

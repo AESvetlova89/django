@@ -7,7 +7,10 @@ from django.urls import reverse_lazy
 from news.filters import PostFilter
 from .forms import CreatePostForm
 from .models import Post,  Category, Subscriber
+from django.core.cache import cache # импортируем наш кэш
+import logging
 
+logger = logging.getLogger(__name__)
 
 class NewsList(ListView):
     model = Post
